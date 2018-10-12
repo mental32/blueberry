@@ -13,12 +13,22 @@ from blueberry import Blueberry
 
 
 def main(args):
-    app = Blueberry(args.parent, args.port)
+    port = args.port
 
+    if args.parent is None and not args.singlehost:
+        sys.exit('blueberry: missing operand "parent"')
+
+    if not args.singlehost:
+        parent = args.parent
+    else:
+        parent = None
+
+    app = Blueberry(parent, port)
     app.run()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('parent', metavar='parent')
+    parser.add_argument('parent', metavar='parent', nargs='?')
     parser.add_argument('-p', dest='port', default='3722', type=int)
+    parser.add_argument('--standalone', dest='singlehost', action='store_true')
     main(parser.parse_args())
