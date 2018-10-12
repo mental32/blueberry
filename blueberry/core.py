@@ -41,6 +41,8 @@ class Blueberry:
         else:
             self._parent, self._parent_port = parent_addr.split('::')
 
+        self._running = False
+
         self._port = port
         self.__build_ws_delay = True
 
@@ -57,6 +59,14 @@ class Blueberry:
         while self.__build_ws_delay:
             await asyncio.sleep(0.1)
 
+        try:
+            self._ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port))
+        except ConnectionRefusedError as e:
+            print(e)
+            self._running = False
+            self.__build_ws_delay = True
+            return
+
         self._ws_server = ws_server = WebsocketServer('0.0.0.0', self._port - 1, self.state, loop=loop)
         await ws_server.start()
 
@@ -65,6 +75,8 @@ class Blueberry:
         self.__build_ws_delay = True
 
     def run(self):
+        self._running = True
+
         timelog('Starting blueberry application... (PID: {0})'.format(self.state.identity))
 
         if not check_inet_connectivity():
@@ -73,6 +85,9 @@ class Blueberry:
         self.__build_ws_delay = False
         while not self.__build_ws_delay:
             continue
+
+        if not self._running:
+            return
 
         with redirect_stdout(io.StringIO()):
             self._flask_app.run('0.0.0.0', self._port, debug=False)
