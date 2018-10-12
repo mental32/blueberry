@@ -63,14 +63,13 @@ class Blueberry:
         while self.__build_ws_delay:
             await asyncio.sleep(0.1)
 
-        if self._parent is not None:
-            try:
-                self._ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port))
-            except ConnectionRefusedError as e:
-                print(e)
-                self._running = False
-                self.__build_ws_delay = True
-                return
+        try:
+            self._ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port - 1))
+        except OSError as e:
+            print(e)
+            self._running = False
+            self.__build_ws_delay = True
+            return
 
         self._ws_server = ws_server = WebsocketServer('0.0.0.0', self._port - 1, self.state, loop=loop)
         await ws_server.start()
