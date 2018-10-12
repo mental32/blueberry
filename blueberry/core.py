@@ -35,9 +35,13 @@ class Blueberry:
         self.state = BlueberryState()
         self.stdout = utils._timelog_stdout = sys.stdout
 
-        if '::' not in parent_addr:
+        if parent_addr is None:
+            self._parent = None
+
+        elif '::' not in parent_addr:
             self._parent_port = 3722
             self._parent = parent_addr
+
         else:
             self._parent, self._parent_port = parent_addr.split('::')
 
@@ -59,18 +63,19 @@ class Blueberry:
         while self.__build_ws_delay:
             await asyncio.sleep(0.1)
 
-        try:
-            self._ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port))
-        except ConnectionRefusedError as e:
-            print(e)
-            self._running = False
-            self.__build_ws_delay = True
-            return
+        if self._parent is not None:
+            try:
+                self._ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port))
+            except ConnectionRefusedError as e:
+                print(e)
+                self._running = False
+                self.__build_ws_delay = True
+                return
 
         self._ws_server = ws_server = WebsocketServer('0.0.0.0', self._port - 1, self.state, loop=loop)
         await ws_server.start()
 
-        timelog('Running WS Server on ws://{0}:{1}'.format(ws_server.host, ws_server.port))
+        timelog('Running WS Server on ws://{0}:{1}'.format(utils.get_local_addr(), ws_server.port))
 
         self.__build_ws_delay = True
 
@@ -78,6 +83,7 @@ class Blueberry:
         self._running = True
 
         timelog('Starting blueberry application... (PID: {0})'.format(self.state.identity))
+        timelog('Blueberry avaliable at: {0}'.format(utils.get_local_addr()))
 
         if not check_inet_connectivity():
             return timelog('No internet access detected!')
