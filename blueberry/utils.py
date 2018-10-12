@@ -10,6 +10,13 @@ def timelog(msg):
     _timelog_stdout.flush()
     return timestamp
 
+def get_local_addr():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.connect(('8.8.8.8', 80))
+    addr = sock.getsockname()[0]
+    sock.close()
+    return addr
+
 def wait_for_connection(timeout=None):
     sock = socket.socket()
     start = int(time.time())
