@@ -14,6 +14,13 @@ from .state import BlueberryState
 from .utils import timelog, check_inet_connectivity
 from .server import WebsocketServer
 
+_LIB_PATH = pathlib.Path(__file__).parents[0]
+
+_SITE_STATIC = _LIB_PATH.joinpath('site_static').absolute()
+_SITE_TEMPLATE = _LIB_PATH.joinpath('site_templates').absolute()
+
+del _LIB_PATH
+
 
 class BlueberryThread(threading.Thread):
     def __init__(self, loop, target):
@@ -51,7 +58,7 @@ class Blueberry:
         self.__build_ws_delay = True
 
         self._ws_client_thread = BlueberryThread(asyncio.new_event_loop(), self.__build_ws)
-        self._flask_app = app = flask.Flask(__name__)
+        self._flask_app = app = flask.Flask(__name__, static_folder=_SITE_STATIC, template_folder=_SITE_TEMPLATE)
 
         module = importlib.import_module('blueberry.site')
         app.register_blueprint(module.blueprint)
@@ -64,7 +71,8 @@ class Blueberry:
             await asyncio.sleep(0.1)
 
         try:
-            self._ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port - 1))
+            if self._parent is not None:
+                self._ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port - 1))
         except OSError as e:
             print(e)
             self._running = False
@@ -82,7 +90,11 @@ class Blueberry:
         self._running = True
 
         timelog('Starting blueberry application... (PID: {0})'.format(self.state.identity))
-        timelog('Blueberry avaliable at: {0}'.format(utils.get_local_addr()))
+
+        if self._parent is None:
+            timelog('Warning! No parent node specified.')
+
+        timelog('Blueberry avaliable at: {addr} (http://{addr}:{port})'.format(addr=utils.get_local_addr(), port=self._port))
 
         if not check_inet_connectivity():
             return timelog('No internet access detected!')
