@@ -4,7 +4,7 @@ Decentralised virtual network application.
 
 ## usage
 
-`python3 -m blueberry <parent_addr:port> [-p local port]`
+`python3 -m blueberry [-p local port]`<parent_addr::port>
 
 ## requirements
  - websockets
