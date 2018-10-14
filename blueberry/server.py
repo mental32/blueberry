@@ -38,9 +38,5 @@ class WebsocketServer:
             await ws.send(state.hot_refrences)
 
             while self.running:
-                # Check to close individual ws
-                if ws in self._closing:
-                    break
-
                 data = await ws.recv()
                 await asyncio.sleep(0)
