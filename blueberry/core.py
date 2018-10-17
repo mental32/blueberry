@@ -39,6 +39,8 @@ class BlueberryThread(threading.Thread):
 
 class Blueberry:
     def __init__(self, parent_addr, port):
+        blueberry._blueberries[os.getpid()] = self
+
         self.state = BlueberryState()
         self.stdout = utils._timelog_stdout = sys.stdout
 
