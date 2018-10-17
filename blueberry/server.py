@@ -34,7 +34,7 @@ class WebsocketServer:
         if set(data.keys()) != {'http'} or not isinstance(data['http'], str):
             return await ws.close()
 
-        async with self.state.refrence(ws, data) as child:
+        with self.state.refrence(ws, data) as child:
             while self.state.app.running:
                 data = await child.recv()
                 await asyncio.sleep(0)
