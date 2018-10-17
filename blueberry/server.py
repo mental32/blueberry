@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import websockets
 
@@ -6,13 +7,11 @@ import websockets
 class WebsocketServer:
     def __init__(self, host, port, state, loop=None):
         self.loop = loop or asyncio.get_event_loop()
+        self.state = state
 
         self._host = host
         self._port = port
         self._server = None
-        self._closing = []
-
-        self.state = state
 
     @property
     def host(self):
@@ -27,16 +26,15 @@ class WebsocketServer:
         return server
 
     async def ws_handler(self, ws, path):
-        data = await ws.recv()
-
-        # No valid introduction if data is None.
-        if data is None:
-            await ws.close()
+        if not self.state.app.running:
             return
 
-        with self.state.refrence(ws, data):
-            await ws.send(state.hot_refrences)
+        data = json.loads(await ws.recv())
 
-            while self.running:
-                data = await ws.recv()
+        if set(data.keys()) != {'http'} or not isinstance(data['http'], str):
+            return await ws.close()
+
+        async with self.state.refrence(ws, data) as child:
+            while self.state.app.running:
+                data = await child.recv()
                 await asyncio.sleep(0)
