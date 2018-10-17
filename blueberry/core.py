@@ -80,11 +80,11 @@ class Blueberry:
 
     async def __client_ws(self, loop):
         self._ws = ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port - 1))
-
         await ws.send(json.dumps({'http': 'http://{0}:{1}'.format(utils.get_local_addr(), self._port)}))
 
         while self._running:
             await ws.recv()
+            await asyncio.sleep(0)
 
     async def __build_ws(self):
         loop = asyncio.get_event_loop()
