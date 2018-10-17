@@ -1,9 +1,14 @@
 import os
 import contextlib
 
+from .child import Child
+
 
 class BlueberryState:
-    def __init__(self):
+    __slots__ ('app', 'connections')
+
+    def __init__(self, app):
+        self.app = app
         self._clear()
 
     def _clear(self):
@@ -14,10 +19,18 @@ class BlueberryState:
         return os.getpid()
 
     @contextlib.contextmanager
-    def refrence(self, ws, ws_data):
-        self.connections.add(ws)
+    async def refrence(self, ws, ws_data):
+        child = Child(ws, ws_data)
+
+        self.connections.add(child)
 
         yield
 
-        if ws in self.connections:
-            self.connections.remove(ws)
+        if not self.app.running:
+            return
+
+        if child in self.connections:
+            self.connections.remove(child)
+
+            for other in self.connections:
+                await other.send({'op': 0, 'd': child.id})
