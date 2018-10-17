@@ -9,6 +9,8 @@ from contextlib import redirect_stdout
 import flask
 import websockets
 
+from blueberry import _blueberries
+
 from . import utils
 from .state import BlueberryState
 from .utils import timelog, check_inet_connectivity
@@ -63,7 +65,20 @@ class Blueberry:
         self._flask_app = app = flask.Flask(__name__, static_folder=_SITE_STATIC, template_folder=_SITE_TEMPLATE)
 
         module = importlib.import_module('blueberry.site')
-        app.register_blueprint(module.blueprint)
+        app.register_blueprint(module.public)
+        app.register_blueprint(module.private)
+
+    @property
+    def running(self):
+        return self._running
+
+    async def __client_ws(self, loop):
+        self._ws = ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port - 1))
+
+        await ws.send({'http': 'http://{0}:{1}'.format(utils.get_local_addr(), self._port)})
+
+        while self._running:
+            await ws.recv()
 
     async def __build_ws(self):
         loop = asyncio.get_event_loop()
@@ -74,7 +89,7 @@ class Blueberry:
 
         try:
             if self._parent is not None:
-                self._ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port - 1))
+                loop.create_task(self.__client_ws(loop))
         except OSError as e:
             print(e)
             self._running = False
