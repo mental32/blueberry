@@ -1,6 +1,7 @@
 import io
 import os
 import sys
+import json
 import asyncio
 import pathlib
 import threading
@@ -73,10 +74,14 @@ class Blueberry:
     def running(self):
         return self._running
 
+    @property
+    def loop(self):
+        return self._ws_client_thread._loop
+
     async def __client_ws(self, loop):
         self._ws = ws = await websockets.connect('ws://{0}:{1}'.format(self._parent, self._parent_port - 1))
 
-        await ws.send({'http': 'http://{0}:{1}'.format(utils.get_local_addr(), self._port)})
+        await ws.send(json.dumps({'http': 'http://{0}:{1}'.format(utils.get_local_addr(), self._port)}))
 
         while self._running:
             await ws.recv()
