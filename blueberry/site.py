@@ -1,8 +1,13 @@
 import flask
 
-blueprint = flask.Blueprint(__name__, 'index')
+public = flask.Blueprint(__name__, 'index')
+private = flask.Blueprint(__name__, 'api', url_prefix='/api/v1')
 
-@blueprint.route('/')
-@blueprint.route('/index')
+@public.route('/')
+@public.route('/index')
 def index():
 	return flask.render_template('index.html')
+
+@private.route('/ping')
+def pong():
+	return 'OK'
