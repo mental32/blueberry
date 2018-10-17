@@ -1,7 +1,7 @@
 import flask
 
 public = flask.Blueprint(__name__, 'index')
-private = flask.Blueprint(__name__, 'api', url_prefix='/api/v1')
+private = flask.Blueprint(__name__ + '_api', 'api', url_prefix='/api/v1')
 
 @public.route('/')
 @public.route('/index')
