@@ -1,4 +1,5 @@
 import os
+import json
 import contextlib
 
 from .child import Child
@@ -19,7 +20,7 @@ class BlueberryState:
         return os.getpid()
 
     @contextlib.contextmanager
-    async def refrence(self, ws, ws_data):
+    def refrence(self, ws, ws_data):
         child = Child(ws, ws_data)
 
         self.connections.add(child)
@@ -33,4 +34,4 @@ class BlueberryState:
             self.connections.remove(child)
 
             for other in self.connections:
-                await other.send({'op': 0, 'd': child.id})
+                self.app.loop.create_task(other.send(json.dumps({'op': 0, 'd': child.id})))
