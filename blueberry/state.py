@@ -25,7 +25,7 @@ class BlueberryState:
 
         self.connections.add(child)
 
-        yield
+        yield child
 
         if not self.app.running:
             return
