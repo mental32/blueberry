@@ -5,7 +5,7 @@ from .child import Child
 
 
 class BlueberryState:
-    __slots__ ('app', 'connections')
+    __slots__ = ('app', 'connections')
 
     def __init__(self, app):
         self.app = app
