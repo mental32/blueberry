@@ -4,11 +4,17 @@ import socket
 
 _timelog_stdout = sys.stdout
 
+
+def log(*args, **kwargs):
+    kwargs['file'] = _timelog_stdout
+    print(*args, **kwargs)
+
+
 def timelog(msg):
     timestamp = int(time.time())
-    _timelog_stdout.write('[%s] %s\n' % (timestamp, msg))
-    _timelog_stdout.flush()
+    log('[%s] %s\n' % (timestamp, msg))
     return timestamp
+
 
 def get_local_addr():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -16,6 +22,7 @@ def get_local_addr():
     addr = sock.getsockname()[0]
     sock.close()
     return addr
+
 
 def wait_for_connection(timeout=None):
     sock = socket.socket()
@@ -31,6 +38,7 @@ def wait_for_connection(timeout=None):
         except OSError:
             time.sleep(0.5)
         continue
+
 
 def check_inet_connectivity():
     sock = socket.socket()
